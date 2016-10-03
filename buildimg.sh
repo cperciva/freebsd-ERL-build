@@ -12,7 +12,7 @@ export TARGET=mips
 export TARGET_ARCH=mips64
 export KERNCONF=ERL
 export ALL_MODULES=YES
-export WITHOUT_MODULES="cxgbe mwlfw netfpga10g otusfw ralfw usb rtwnfw"
+export WITHOUT_MODULES="urtwnfw cxgbe mwlfw netfpga10g otusfw ralfw usb rtwnfw"
 
 # Create working space
 WORKDIR=`env TMPDIR=\`pwd\` mktemp -d -t ERLBUILD`
