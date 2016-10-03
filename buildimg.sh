@@ -28,6 +28,8 @@ mkdir ${WORKDIR}/tree
 
 # Download packages
 cp /etc/resolv.conf ${WORKDIR}/tree/etc/
+mkdir -p ${WORKDIR}/tree/usr/local/etc/pkg/repos/
+sed -e 's/quarterly/latest/' ${WORKDIR}/tree/etc/pkg/FreeBSD.conf > ${WORKDIR}/tree/usr/local/etc/pkg/repos/FreeBSD.conf
 pkg -c ${WORKDIR}/tree install -Fy pkg djbdns isc-dhcp43-server
 rm ${WORKDIR}/tree/etc/resolv.conf
 
