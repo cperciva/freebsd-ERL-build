@@ -19,12 +19,12 @@ WORKDIR=`env TMPDIR=\`pwd\` mktemp -d -t ERLBUILD`
 
 # Build MIPS64 world and ERL kernel
 JN=`sysctl -n hw.ncpu`
-( cd $SRCDIR && make buildworld -j${JN} )
-( cd $SRCDIR && make buildkernel -j${JN} )
+make -C $SRCDIR buildworld -j${JN}
+make -C $SRCDIR buildkernel -j${JN}
 
 # Install into a temporary tree
 mkdir ${WORKDIR}/tree
-( cd $SRCDIR && make installworld distribution installkernel DESTDIR=${WORKDIR}/tree )
+make -C ${SRCDIR} installworld distribution installkernel DESTDIR=${WORKDIR}/tree
 
 # Download packages
 cp /etc/resolv.conf ${WORKDIR}/tree/etc/
