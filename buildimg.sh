@@ -36,6 +36,16 @@ mount -t devfs devfs ${WORKDIR}/tree/dev
 chroot ${WORKDIR}/tree /qemu pkg bootstrap -y
 chroot ${WORKDIR}/tree /qemu pkg install -y djbdns isc-dhcp44-server
 
+# DNS setup
+chroot ${WORKDIR}/tree /qemu pw user add dnscache -u 184 -d /nonexistent -s /usr/sbin/nologin
+chroot ${WORKDIR}/tree /qemu pw user add dnslog -u 186 -d /nonexistent -s /usr/sbin/nologin
+mkdir ${WORKDIR}/tree/var/service
+chroot ${WORKDIR}/tree /qemu /usr/local/bin/dnscache-conf dnscache dnslog /var/service/dnscache 0.0.0.0
+touch ${WORKDIR}/tree/var/service/dnscache/root/ip/192.168
+
+# Create ubnt user
+echo ubnt | chroot ${WORKDIR}/tree /qemu pw user add ubnt -m -G wheel -h 0
+
 # Clean up temporary bits
 umount ${WORKDIR}/tree/dev
 rm ${WORKDIR}/tree/qemu
@@ -105,50 +115,6 @@ subnet 192.168.2.0 netmask 255.255.255.0 {
         option domain-name-servers 192.168.2.1;
 }
 EOF
-
-# Script to complete setup once we're running on the right hardware
-mkdir -p ${WORKDIR}/tree/usr/local/etc/rc.d
-cat > ${WORKDIR}/tree/usr/local/etc/rc.d/ERL <<'EOF'
-#!/bin/sh
-
-# KEYWORD: firstboot
-# PROVIDE: ERL
-# REQUIRE: NETWORKING
-# BEFORE: LOGIN
-
-# This script completes the configuration of EdgeRouter Lite systems.  It
-# is only included in those images, and so is enabled by default.
-
-. /etc/rc.subr
-
-: ${ERL_enable:="YES"}
-
-name="ERL"
-rcvar="ERL_enable"
-start_cmd="ERL_run"
-stop_cmd=":"
-
-ERL_run()
-{
-
-	# DNS setup
-	pw user add dnscache -u 184 -d /nonexistent -s /usr/sbin/nologin
-	pw user add dnslog -u 186 -d /nonexistent -s /usr/sbin/nologin
-	mkdir /var/service
-	/usr/local/bin/dnscache-conf dnscache dnslog /var/service/dnscache 0.0.0.0
-	touch /var/service/dnscache/root/ip/192.168
-
-	# Create ubnt user
-	echo ubnt | pw user add ubnt -m -G wheel -h 0
-
-	# We need to reboot so that services will be started
-	touch ${firstboot_sentinel}-reboot
-}
-
-load_rc_config $name
-run_rc_command "$1"
-EOF
-chmod 755 ${WORKDIR}/tree/usr/local/etc/rc.d/ERL
 
 # We want to run firstboot scripts
 touch ${WORKDIR}/tree/firstboot
