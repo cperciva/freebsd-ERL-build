@@ -115,6 +115,11 @@ subnet 192.168.2.0 netmask 255.255.255.0 {
         option domain-name-servers 192.168.2.1;
 }
 EOF
+cat > ${WORKDIR}/tree/etc/periodic.conf <<EOF
+daily_output="/var/log/daily.log"
+weekly_output="/var/log/weekly.log"
+monthly_output="/var/log/monthly.log"
+EOF
 
 # We want to run firstboot scripts
 touch ${WORKDIR}/tree/firstboot
