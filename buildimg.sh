@@ -27,11 +27,18 @@ make -C $SRCDIR buildkernel -j${JN}
 mkdir ${WORKDIR}/tree
 make -C ${SRCDIR} installworld distribution installkernel DESTDIR=${WORKDIR}/tree
 
-# Download packages
+# Prepare to run commands inside a chroot.
 cp /etc/resolv.conf ${WORKDIR}/tree/etc/
-mkdir -p ${WORKDIR}/tree/usr/local/etc/pkg/repos/
-sed -e 's/quarterly/latest/' ${WORKDIR}/tree/etc/pkg/FreeBSD.conf > ${WORKDIR}/tree/usr/local/etc/pkg/repos/FreeBSD.conf
-pkg -c ${WORKDIR}/tree install -Fy pkg djbdns isc-dhcp43-server
+cp /usr/local/bin/qemu-${TARGET_ARCH}-static ${WORKDIR}/tree/qemu
+mount -t devfs devfs ${WORKDIR}/tree/dev
+
+# Install packages
+chroot ${WORKDIR}/tree /qemu pkg bootstrap -y
+chroot ${WORKDIR}/tree /qemu pkg install -y djbdns isc-dhcp44-server
+
+# Clean up temporary bits
+umount ${WORKDIR}/tree/dev
+rm ${WORKDIR}/tree/qemu
 rm ${WORKDIR}/tree/etc/resolv.conf
 
 # FreeBSD configuration
@@ -123,10 +130,6 @@ stop_cmd=":"
 
 ERL_run()
 {
-
-	# Packages
-	env SIGNATURE_TYPE=NONE pkg add -f /var/cache/pkg/pkg-*.txz
-	pkg install -Uy djbdns isc-dhcp43-server
 
 	# DNS setup
 	pw user add dnscache -u 184 -d /nonexistent -s /usr/sbin/nologin
