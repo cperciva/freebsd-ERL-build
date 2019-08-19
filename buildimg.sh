@@ -16,6 +16,7 @@ export KERNCONF=ERL
 
 # Create working space
 WORKDIR=`env TMPDIR=\`pwd\` mktemp -d -t ERLBUILD`
+chflags nodump ${WORKDIR}
 
 # Build MIPS64 world and ERL kernel
 JN=`sysctl -n hw.ncpu`
