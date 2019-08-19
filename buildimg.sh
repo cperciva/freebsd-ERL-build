@@ -55,8 +55,6 @@ rm ${WORKDIR}/tree/etc/resolv.conf
 cat > ${WORKDIR}/tree/etc/rc.conf <<EOF
 hostname="ERL"
 growfs_enable="YES"
-tmpfs="YES"
-tmpsize="50M"
 ifconfig_octe0="DHCP"
 ifconfig_octe1="192.168.1.1 netmask 255.255.255.0"
 ifconfig_octe2="192.168.2.1 netmask 255.255.255.0"
@@ -120,9 +118,19 @@ daily_output="/var/log/daily.log"
 weekly_output="/var/log/weekly.log"
 monthly_output="/var/log/monthly.log"
 EOF
+echo "/dev/da0s2a / ufs ro 1 1" > ${WORKDIR}/tree/etc/fstab
 
 # We want to run firstboot scripts
 touch ${WORKDIR}/tree/firstboot
+
+# We want to have a read-only /, but we'll need to write to /etc/ and /var/
+# after we boot.  Stash their contents and set things up to extract them into
+# memory disks at boot time.
+touch ${WORKDIR}/tree/etc/diskless
+mkdir -p ${WORKDIR}/tree/conf/base
+cp -Rp ${WORKDIR}/tree/etc/ ${WORKDIR}/tree/conf/base/etc
+cp -Rp ${WORKDIR}/tree/var/ ${WORKDIR}/tree/conf/base/var
+echo 128000 > ${WORKDIR}/tree/conf/base/var/md_size
 
 # Create FAT32 filesystem to hold the kernel
 newfs_msdos -C 33M -F 32 -c 1 -S 512 ${WORKDIR}/FAT32.img
@@ -135,7 +143,6 @@ rmdir ${WORKDIR}/FAT32
 mdconfig -d -u ${mddev}
 
 # Create UFS filesystem
-echo "/dev/da0s2a / ufs rw 1 1" > ${WORKDIR}/tree/etc/fstab
 makefs -f 16384 -B big -s 1600m ${WORKDIR}/UFS.img ${WORKDIR}/tree
 
 # Create complete disk image
