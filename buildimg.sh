@@ -161,7 +161,7 @@ mdconfig -d -u ${mddev}
 
 # Create UFS filesystem
 echo "/dev/da0s2a / ufs rw 1 1" > ${WORKDIR}/tree/etc/fstab
-makefs -f 16384 -B big -s 1420m ${WORKDIR}/UFS.img ${WORKDIR}/tree
+makefs -f 16384 -B big -s 1600m ${WORKDIR}/UFS.img ${WORKDIR}/tree
 
 # Create complete disk image
 mkimg -s mbr		\
